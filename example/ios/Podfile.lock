@@ -1,0 +1,29 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_hpplay (0.0.1):
+    - Flutter
+    - LBLelinkKit
+  - LBLelinkKit (30216)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_hpplay (from `.symlinks/plugins/flutter_hpplay/ios`)
+
+SPEC REPOS:
+  https://mirrors.tuna.tsinghua.edu.cn/git/CocoaPods/Specs.git:
+    - LBLelinkKit
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_hpplay:
+    :path: ".symlinks/plugins/flutter_hpplay/ios"
+
+SPEC CHECKSUMS:
+  Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  flutter_hpplay: b1a3af6a08d848b2ea36a318ef27c89f22d2c8ea
+  LBLelinkKit: 8c2372ada58a1b6e49870bbddb86b4e3d63ec4e2
+
+PODFILE CHECKSUM: 4c7c9ee61abd2d3d0d47a714f6aaf67707b55b7d
+
+COCOAPODS: 1.8.4
