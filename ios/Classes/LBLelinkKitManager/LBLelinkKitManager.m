@@ -58,6 +58,11 @@ NSString * const LBLelinkKitManagerPlayerErrorNotification = @"LBLelinkKitManage
     /**
      点击设备，如果未连接，则建立连接，如果已连接，则断开连接
      */
+    if(_currentIndex != nil && index == [_currentIndex intValue]){
+        _currentIndex = nil;
+    }else {
+        _currentIndex = [NSNumber numberWithInt:index];
+    }
     // 选择的连接
     LBLelinkConnection * selectedConnection = self.lelinkConnections[index];
     if (_currentConnection == nil) {
@@ -85,6 +90,7 @@ NSString * const LBLelinkKitManagerPlayerErrorNotification = @"LBLelinkKitManage
 #pragma mark - LBLelinkBrowserDelegate
 - (void)lelinkBrowser:(LBLelinkBrowser *)browser onError:(NSError *)error {
     NSLog(@"搜索错误 %@", error);
+    [_channel invokeMethod:@"onLelinkBrowserError" arguments: error.userInfo];
     /**
      注意：如有需要，通知更新UI
      */
@@ -95,11 +101,11 @@ NSString * const LBLelinkKitManagerPlayerErrorNotification = @"LBLelinkKitManage
     if (services == nil) {
         return;
     }
-    NSMutableArray * datas = [[NSMutableArray alloc] init];
+    _serviceNames = [[NSMutableArray alloc] init];
     for (LBLelinkService *service in services) {
-        [datas addObject:@{@"name":service.lelinkServiceName}];
+        [_serviceNames addObject:@{@"name":service.lelinkServiceName}];
     }
-    [_channel invokeMethod:@"onLelinkBrowserDidFindLelinkServices" arguments: @{@"services": datas}];
+    [_channel invokeMethod:@"onLelinkBrowserDidFindLelinkServices" arguments: _serviceNames];
     /**
      遍历services，使用services中的lelinkService创建lelinkConnection，并添加到self.lelinkConnections中
      注意去重，如果有，则不重复创建
@@ -160,6 +166,7 @@ NSString * const LBLelinkKitManagerPlayerErrorNotification = @"LBLelinkKitManage
 #pragma mark - LBLelinkConnectionDelegate
 - (void)lelinkConnection:(LBLelinkConnection *)connection onError:(NSError *)error {
     NSLog(@"连接错误 %@",error);
+     [_channel invokeMethod:@"onLelinkConnectionError" arguments: error.userInfo];
     /**
      注意：如有需要，则通知更新UI
      */
@@ -171,7 +178,8 @@ NSString * const LBLelinkKitManagerPlayerErrorNotification = @"LBLelinkKitManage
      注意：如有需要，则通知更新UI
      */
     [[NSNotificationCenter defaultCenter] postNotificationName:LBLelinkKitManagerConnectionDidConnectedNotification object:nil userInfo:@{@"connection":connection}];
-    [_channel invokeMethod:@"onLelinkDidConnectionToService" arguments: @{@"connection": @""}];
+    int index = (int)[self.lelinkConnections indexOfObject:connection];
+    [_channel invokeMethod:@"onLelinkDidConnectionToService" arguments: [NSString stringWithFormat:@"%d", index]];
 }
 
 - (void)lelinkConnection:(LBLelinkConnection *)connection disConnectToService:(LBLelinkService *)service {
@@ -187,6 +195,8 @@ NSString * const LBLelinkKitManagerPlayerErrorNotification = @"LBLelinkKitManage
         }
     }
     [[NSNotificationCenter defaultCenter] postNotificationName:LBLelinkKitManagerConnectionDisConnectedNotification object:nil userInfo:@{@"connection":connection}];
+    int index = (int)[self.lelinkConnections indexOfObject:connection];
+    [_channel invokeMethod:@"onLelinkDisConnectionToService" arguments: [NSString stringWithFormat:@"%d", index]];
 }
 
 #pragma mark - LBLelinkPlayerDelegate
@@ -194,18 +204,21 @@ NSString * const LBLelinkKitManagerPlayerErrorNotification = @"LBLelinkKitManage
 - (void)lelinkPlayer:(LBLelinkPlayer *)player onError:(NSError *)error {
     NSLog(@"播放错误 %@",error);
     [[NSNotificationCenter defaultCenter] postNotificationName:LBLelinkKitManagerPlayerErrorNotification object:nil userInfo:@{@"error":error}];
+    [_channel invokeMethod:@"onLelinkPlayerError" arguments: error.userInfo];
 }
 
 - (void)lelinkPlayer:(LBLelinkPlayer *)player playStatus:(LBLelinkPlayStatus)playStatus {
     NSLog(@"播放状态 %lu", (unsigned long)playStatus);
     self.currentPlayStatus = playStatus;
     [[NSNotificationCenter defaultCenter] postNotificationName:LBLelinkKitManagerPlayerStatusNotification object:nil userInfo:@{@"playStatus":[NSNumber numberWithInteger:playStatus]}];
-    
+    [_channel invokeMethod:@"onLelinkPlayerStatus" arguments: [NSString stringWithFormat:@"%lu", (unsigned long)self.currentPlayStatus]];
 }
 
 - (void)lelinkPlayer:(LBLelinkPlayer *)player progressInfo:(LBLelinkProgressInfo *)progressInfo {
     NSLog(@"播放进度 总时长：%ld, 当前播放位置：%ld",(long)progressInfo.duration, (long)progressInfo.currentTime);
     [[NSNotificationCenter defaultCenter] postNotificationName:LBLelinkKitManagerPlayerProgressNotification object:nil userInfo:@{@"progressInfo":progressInfo}];
+    [_channel invokeMethod:@"onLelinkPlayerProgressInfo" arguments: @{@"duration":[NSString stringWithFormat:@"%ld",(long)progressInfo.duration],@"currentTime":[NSString stringWithFormat:@"%ld",(long)progressInfo.currentTime]}
+     ];
 }
 
 #pragma mark - method

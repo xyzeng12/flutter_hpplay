@@ -16,6 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) FlutterMethodChannel *channel;
 /** 连接数组 */
 @property (nonatomic, strong) NSMutableArray *lelinkConnections;
+/** 连接名称数组 */
+@property (nonatomic, strong) NSMutableArray * serviceNames;/** 连接名称数组 */
+@property (nonatomic, strong) NSNumber * currentIndex;
 /** 当前连接 */
 @property (nonatomic, strong) LBLelinkConnection *currentConnection;
 /** 播放器 */

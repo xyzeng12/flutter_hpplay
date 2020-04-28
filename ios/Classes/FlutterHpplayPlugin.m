@@ -51,8 +51,11 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
+    LBLelinkKitManager * manager =[LBLelinkKitManager sharedManager];
   if ([@"getPlatformVersion" isEqualToString:call.method]) {
     result([@"iOS " stringByAppendingString:[[UIDevice currentDevice] systemVersion]]);
+  }if ([@"getIsConnected" isEqualToString:call.method]) {
+      result(manager.currentConnection.isConnected?@"1":@"0");
   }else if([@"setup" isEqualToString:call.method]) {
     [self setup:call result: result];
   }else if([@"search" isEqualToString:call.method]) {

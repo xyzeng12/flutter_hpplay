@@ -3,15 +3,28 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:platform/platform.dart';
 
-typedef Future<dynamic> EventHandler(Map<String, dynamic> event);
+typedef Future<dynamic> MapHandler(Map<String, dynamic> event);
+typedef Future<dynamic> DynamicHandler(dynamic val);
 
-enum LB_ENUM {
+///媒体类型
+enum LBLelinkMediaType {
   LBLelinkMediaTypeVideoOnline, // 在线视频媒体类型
   LBLelinkMediaTypeAudioOnline, // 在线音频媒体类型
   LBLelinkMediaTypePhotoOnline, // 在线图片媒体类型
   LBLelinkMediaTypePhotoLocal, // 本地图片媒体类型
   LBLelinkMediaTypeVideoLocal, // 本地视频媒体类型 注意：需要APP层启动本地的webServer，生成一个本地视频的URL
   LBLelinkMediaTypeAudioLocal, // 本地音频媒体类型 注意：需要APP层启动本地的webServer，生成一个本地音频的URL
+}
+
+///播放状态
+enum LBLelinkPlayStatus {
+  LBLelinkPlayStatusUnkown, // 未知状态
+  LBLelinkPlayStatusLoading, // 视频正在加载状态
+  LBLelinkPlayStatusPlaying, // 正在播放状态
+  LBLelinkPlayStatusPause, // 暂停状态
+  LBLelinkPlayStatusStopped, // 退出播放状态
+  LBLelinkPlayStatusCommpleted, // 播放完成状态
+  LBLelinkPlayStatusError, // 播放错误
 }
 
 class FlutterHpplay {
@@ -29,18 +42,24 @@ class FlutterHpplay {
   static final FlutterHpplay _instance = FlutterHpplay.private(
       const MethodChannel('flutter_hpplay'), const LocalPlatform());
 
-  EventHandler _onLelinkBrowserError;
-  EventHandler _onLelinkBrowserDidFindLelinkServices;
-  EventHandler _onLelinkConnectionError;
-  EventHandler _onLelinkDidConnectionToService;
-  EventHandler _onLelinkDisConnectionToService;
-  EventHandler _onLelinkPlayerError;
-  EventHandler _onLelinkPlayerStatus;
-  EventHandler _onLelinkPlayerProgressInfo;
+  DynamicHandler _onLelinkBrowserError;
+  DynamicHandler _onLelinkBrowserDidFindLelinkServices;
+  DynamicHandler _onLelinkConnectionError;
+  DynamicHandler _onLelinkDidConnectionToService;
+  DynamicHandler _onLelinkDisConnectionToService;
+  DynamicHandler _onLelinkPlayerError;
+  DynamicHandler _onLelinkPlayerStatus;
+  MapHandler _onLelinkPlayerProgressInfo;
 
   Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');
     return version;
+  }
+
+  Future<bool> get isConnected async {
+    var val = await _channel.invokeMethod('getIsConnected');
+    final bool isConnected = val == '1';
+    return isConnected;
   }
 
   void setup({
@@ -63,7 +82,8 @@ class FlutterHpplay {
   }
 
   void playMedia(String mediaURLString, int mediaType) {
-    _channel.invokeMethod('playMedia', {'mediaURLString': mediaURLString, 'mediaType': mediaType});
+    _channel.invokeMethod('playMedia',
+        {'mediaURLString': mediaURLString, 'mediaType': mediaType});
   }
 
   void pause() {
@@ -83,28 +103,28 @@ class FlutterHpplay {
   ///
   void addEventHandler({
     ///搜索错误
-    EventHandler onLelinkBrowserError,
+    DynamicHandler onLelinkBrowserError,
 
     ///发现设备
-    EventHandler onLelinkBrowserDidFindLelinkServices,
+    DynamicHandler onLelinkBrowserDidFindLelinkServices,
 
     ///连接错误
-    EventHandler onLelinkConnectionError,
+    DynamicHandler onLelinkConnectionError,
 
     ///连接到设备
-    EventHandler onLelinkDidConnectionToService,
+    DynamicHandler onLelinkDidConnectionToService,
 
     ///断开连接
-    EventHandler onLelinkDisConnectionToService,
+    DynamicHandler onLelinkDisConnectionToService,
 
     ///播放错误
-    EventHandler onLelinkPlayerError,
+    DynamicHandler onLelinkPlayerError,
 
     ///播放状态
-    EventHandler onLelinkPlayerStatus,
+    DynamicHandler onLelinkPlayerStatus,
 
     ///播放进度 总时长、当前播放位置
-    EventHandler onLelinkPlayerProgressInfo,
+    MapHandler onLelinkPlayerProgressInfo,
   }) {
     print(flutterLog + "addEventHandler:");
 
@@ -125,22 +145,19 @@ class FlutterHpplay {
 
     switch (call.method) {
       case "onLelinkBrowserError":
-        return _onLelinkBrowserError(call.arguments.cast<String, dynamic>());
+        return _onLelinkBrowserError(call.arguments);
       case "onLelinkBrowserDidFindLelinkServices":
-        return _onLelinkBrowserDidFindLelinkServices(
-            call.arguments.cast<String, dynamic>());
+        return _onLelinkBrowserDidFindLelinkServices(call.arguments);
       case "onLelinkConnectionError":
-        return _onLelinkConnectionError(call.arguments.cast<String, dynamic>());
+        return _onLelinkConnectionError(call.arguments);
       case "onLelinkDidConnectionToService":
-        return _onLelinkDidConnectionToService(
-            call.arguments.cast<String, dynamic>());
+        return _onLelinkDidConnectionToService(call.arguments);
       case "onLelinkDisConnectionToService":
-        return _onLelinkDisConnectionToService(
-            call.arguments.cast<String, dynamic>());
+        return _onLelinkDisConnectionToService(call.arguments);
       case "onLelinkPlayerError":
-        return _onLelinkPlayerError(call.arguments.cast<String, dynamic>());
+        return _onLelinkPlayerError(call.arguments);
       case "onLelinkPlayerStatus":
-        return _onLelinkPlayerStatus(call.arguments.cast<String, dynamic>());
+        return _onLelinkPlayerStatus(call.arguments);
       case "onLelinkPlayerProgressInfo":
         return _onLelinkPlayerProgressInfo(
             call.arguments.cast<String, dynamic>());

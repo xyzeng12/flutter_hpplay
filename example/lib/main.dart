@@ -17,6 +17,8 @@ class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   FlutterHpplay hpplay = FlutterHpplay();
   List datas = [];
+  int currentIndex = -1;
+  LBLelinkPlayStatus playStatus;
   @override
   void initState() {
     super.initState();
@@ -29,18 +31,45 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       platformVersion = await hpplay.platformVersion;
+      var isConnected = await hpplay.isConnected;
+      print('isConnected---$isConnected');
       hpplay.addEventHandler(
-        onLelinkBrowserDidFindLelinkServices:
-            (Map<String, dynamic> message) async {
-          List services = message['services'];
-          setState(() {
-            datas = services;
-          });
-          print('flutter');
-          print(services[0]['name']);
+        onLelinkBrowserError: (dynamic message) async {
+          print('flutter--搜索错误: $message');
         },
-        onLelinkDidConnectionToService: (Map<String, dynamic> message) async {
-          1;
+        onLelinkBrowserDidFindLelinkServices: (var message) async {
+          setState(() {
+            datas = message;
+          });
+          print('flutter--发现设备: $message');
+        },
+        onLelinkConnectionError: (dynamic message) async {
+          print('flutter--连接错误: $message');
+        },
+        onLelinkDidConnectionToService: (dynamic message) async {
+          setState(() {
+            currentIndex = int.parse(message);
+          });
+          print('flutter--连接到设备: $currentIndex');
+        },
+        onLelinkDisConnectionToService: (dynamic message) async {
+          print('flutter--断开连接: $message');
+          setState(() {
+            currentIndex = -1;
+          });
+        },
+        onLelinkPlayerError: (dynamic message) async {
+          print('flutter--播放错误: $message');
+        },
+        onLelinkPlayerStatus: (dynamic message) async {
+          print('flutter--播放状态: $message');
+          setState(() {
+            playStatus = LBLelinkPlayStatus.values[int.parse(message)];
+          });
+        },
+        onLelinkPlayerProgressInfo: (Map<String, dynamic> message) async {
+          print(
+              'flutter--播放进度 总时长:${message['duration']}、当前播放位置:${message['currentTime']}');
         },
       );
       hpplay.search();
@@ -72,7 +101,11 @@ class _MyAppState extends State<MyApp> {
         onTap: () {
           hpplay.deviceListDidSelectIndex(i);
         },
-        child: Text('${datas[i]['name']}'),
+        child: Text(
+          '${datas[i]['name']}',
+          style:
+              TextStyle(color: currentIndex == i ? Colors.red : Colors.black),
+        ),
       ));
     }
     return MaterialApp(
@@ -93,23 +126,33 @@ class _MyAppState extends State<MyApp> {
                 child: Text('链接: $_platformVersion\n'),
               ),
               InkWell(
-                onTap: () {
+                onTap: () async {
+                  var isConnected = await hpplay.isConnected;
+                  print('isConnected---$isConnected');
                   hpplay.playMedia(
                       'http://video.gzk12.com/2cb0accbda1d4f17ae532b1f7f49f571/18e6eda7f5c4a7589a7890584cb7138a-fd-encrypt-stream.m3u8',
-                      LB_ENUM.LBLelinkMediaTypeVideoOnline.index);
+                      LBLelinkMediaType.LBLelinkMediaTypeVideoOnline.index);
                 },
                 child: Text('播放: $_platformVersion\n'),
               ),
               InkWell(
                 onTap: () {
+                  if (playStatus ==
+                      LBLelinkPlayStatus.LBLelinkPlayStatusPause) {
+                    hpplay.resumePlay();
+                  } else {
                   hpplay.pause();
+                  }
                 },
-                child: Text('暂停: $_platformVersion\n'),
+                child: Text(
+                    playStatus == LBLelinkPlayStatus.LBLelinkPlayStatusPause
+                        ? '继续'
+                        : '暂停'),
               ),
               InkWell(
                 onTap: () {
-                  hpplay.stop();
-                  },
+                    hpplay.stop();
+                },
                 child: Text('停止: $_platformVersion\n'),
               ),
             ],
