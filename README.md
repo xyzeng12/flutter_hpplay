@@ -1,6 +1,6 @@
 # flutter_hpplay
 
-A new Flutter plugin.
+乐播投屏flutter插件，基于原生sdk封装的插件(暂时仅支持iOS)
 
 ## Getting Started
 
