@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:flutter_hpplay/flutter_hpplay.dart';
+import 'package:flutter_hpplay/flutter_hpplay_plus.dart';
 
 void main() => runApp(MyApp());
 
@@ -15,7 +15,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
-  FlutterHpplay hpplay = FlutterHpplay();
+  FlutterHpplayPlus hpplay = FlutterHpplayPlus();
   List datas = [];
   int currentIndex = -1;
   LBLelinkPlayStatus playStatus;

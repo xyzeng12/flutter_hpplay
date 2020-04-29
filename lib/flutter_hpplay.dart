@@ -1,49 +1,24 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:platform/platform.dart';
+import 'package:flutter_hpplay/flutter_hpplay_plus.dart';
 
-typedef Future<dynamic> MapHandler(Map<String, dynamic> event);
-typedef Future<dynamic> DynamicHandler(dynamic val);
-
-///媒体类型
-enum LBLelinkMediaType {
-  LBLelinkMediaTypeVideoOnline, // 在线视频媒体类型
-  LBLelinkMediaTypeAudioOnline, // 在线音频媒体类型
-  LBLelinkMediaTypePhotoOnline, // 在线图片媒体类型
-  LBLelinkMediaTypePhotoLocal, // 本地图片媒体类型
-  LBLelinkMediaTypeVideoLocal, // 本地视频媒体类型 注意：需要APP层启动本地的webServer，生成一个本地视频的URL
-  LBLelinkMediaTypeAudioLocal, // 本地音频媒体类型 注意：需要APP层启动本地的webServer，生成一个本地音频的URL
-}
-
-///播放状态
-enum LBLelinkPlayStatus {
-  LBLelinkPlayStatusUnkown, // 未知状态
-  LBLelinkPlayStatusLoading, // 视频正在加载状态
-  LBLelinkPlayStatusPlaying, // 正在播放状态
-  LBLelinkPlayStatusPause, // 暂停状态
-  LBLelinkPlayStatusStopped, // 退出播放状态
-  LBLelinkPlayStatusCommpleted, // 播放完成状态
-  LBLelinkPlayStatusError, // 播放错误
-}
-
+///乐播投屏扩展插件
 class FlutterHpplay {
-  final String flutterLog = "| Hpplay | Flutter | ";
-  factory FlutterHpplay() => _instance;
+  FlutterHpplayPlus plus;
+  FlutterHpplay._();
 
-  final MethodChannel _channel;
-  final Platform _platform;
+  static FlutterHpplay _instance;
+
+  static FlutterHpplay getInstance() {
+    if (_instance == null) {
+      _instance = FlutterHpplay._();
+      _instance.plus = FlutterHpplayPlus();
+      _instance.registerHandler();
+    }
+    return _instance;
+  }
+
   List serviceNames = [];
   int currentIndex = -1;
   LBLelinkPlayStatus playStatus;
-
-  @visibleForTesting
-  FlutterHpplay.private(MethodChannel channel, Platform platform)
-      : _channel = channel,
-        _platform = platform;
-
-  static final FlutterHpplay _instance = FlutterHpplay.private(
-      const MethodChannel('flutter_hpplay'), const LocalPlatform());
 
   DynamicHandler _onLelinkBrowserError;
   DynamicHandler _onLelinkBrowserDidFindLelinkServices;
@@ -54,57 +29,16 @@ class FlutterHpplay {
   DynamicHandler _onLelinkPlayerStatus;
   MapHandler _onLelinkPlayerProgressInfo;
 
-  Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
-
-  Future<bool> get isConnected async {
-    var val = await _channel.invokeMethod('getIsConnected');
-    final bool isConnected = val == '1';
-    return isConnected;
-  }
-
-  void setup({
+  void setup(
     String appid,
     String secretKey,
-    String channel = '',
-    bool debug = false,
-  }) {
-    registerHandler();
-    print(flutterLog + "setup:");
-    _channel.invokeMethod(
-        'setup', {'appid': appid, 'secretKey': secretKey, 'debug': debug});
+    String channel,
+    bool debug,
+  ) {
+    plus.setup(
+        appid: appid, secretKey: secretKey, channel: channel, debug: debug);
   }
 
-  void search() {
-    _channel.invokeMethod('search');
-  }
-
-  void deviceListDidSelectIndex(int index) {
-    _channel.invokeMethod('deviceListDidSelectIndex', {'index': index});
-  }
-
-  void playMedia(String mediaURLString, int mediaType) {
-    _channel.invokeMethod('playMedia',
-        {'mediaURLString': mediaURLString, 'mediaType': mediaType});
-  }
-
-  void pause() {
-    _channel.invokeMethod('pause');
-  }
-
-  void resumePlay() {
-    _channel.invokeMethod('resumePlay');
-  }
-
-  void stop() {
-    _channel.invokeMethod('stop');
-  }
-
-  ///
-  /// 初始化 FlutterHpplay 必须先初始化才能执行其他操作(比如接收事件传递)
-  ///
   void addEventHandler({
     ///搜索错误
     DynamicHandler onLelinkBrowserError,
@@ -130,8 +64,6 @@ class FlutterHpplay {
     ///播放进度 总时长、当前播放位置
     MapHandler onLelinkPlayerProgressInfo,
   }) {
-    print(flutterLog + "addEventHandler:");
-
     _onLelinkBrowserError = onLelinkBrowserError;
     _onLelinkBrowserDidFindLelinkServices =
         onLelinkBrowserDidFindLelinkServices;
@@ -141,60 +73,40 @@ class FlutterHpplay {
     _onLelinkPlayerError = onLelinkPlayerError;
     _onLelinkPlayerStatus = onLelinkPlayerStatus;
     _onLelinkPlayerProgressInfo = onLelinkPlayerProgressInfo;
-    _channel.setMethodCallHandler(_handleMethod);
   }
 
-  Future<Null> _handleMethod(MethodCall call) async {
-    print(flutterLog + "_handleMethod:");
 
-    switch (call.method) {
-      case "onLelinkBrowserError":
-        return _onLelinkBrowserError(call.arguments);
-      case "onLelinkBrowserDidFindLelinkServices":
-        return _onLelinkBrowserDidFindLelinkServices(call.arguments);
-      case "onLelinkConnectionError":
-        return _onLelinkConnectionError(call.arguments);
-      case "onLelinkDidConnectionToService":
-        return _onLelinkDidConnectionToService(call.arguments);
-      case "onLelinkDisConnectionToService":
-        return _onLelinkDisConnectionToService(call.arguments);
-      case "onLelinkPlayerError":
-        return _onLelinkPlayerError(call.arguments);
-      case "onLelinkPlayerStatus":
-        return _onLelinkPlayerStatus(call.arguments);
-      case "onLelinkPlayerProgressInfo":
-        return _onLelinkPlayerProgressInfo(
-            call.arguments.cast<String, dynamic>());
-      default:
-        throw new UnsupportedError("Unrecognized Event");
-    }
+  void registerHandler() {
+    _instance.plus.addEventHandler(
+      onLelinkBrowserError: (dynamic message) async {
+        _onLelinkBrowserError(message);
+      },
+      onLelinkBrowserDidFindLelinkServices: (dynamic message) async {
+        serviceNames = message;
+        _onLelinkBrowserDidFindLelinkServices(message);
+      },
+      onLelinkConnectionError: (dynamic message) async {
+        _onLelinkConnectionError(message);
+      },
+      onLelinkDidConnectionToService: (dynamic message) async {
+        currentIndex = int.parse(message);
+        _onLelinkDidConnectionToService(message);
+      },
+      onLelinkDisConnectionToService: (dynamic message) async {
+        currentIndex = -1;
+        _onLelinkDisConnectionToService(message);
+      },
+      onLelinkPlayerError: (dynamic message) async {
+        _onLelinkPlayerError(message);},
+      onLelinkPlayerStatus: (dynamic message) async {
+        playStatus = LBLelinkPlayStatus.values[int.parse(message)];
+        _onLelinkPlayerStatus(message);
+      },
+      onLelinkPlayerProgressInfo: (Map<String, dynamic> message) async {
+        _onLelinkPlayerProgressInfo(message);
+        // print(
+        //     'flutter--播放进度 总时长:${message['duration']}、当前播放位置:${message['currentTime']}');
+      },
+    );
   }
-
-  void registerHandler(){
-    _instance.addEventHandler(
-        onLelinkBrowserError: (dynamic message) async {
-        },
-        onLelinkBrowserDidFindLelinkServices: (dynamic message) async {
-          serviceNames = message;
-        },
-        onLelinkConnectionError: (dynamic message) async {
-        },
-        onLelinkDidConnectionToService: (dynamic message) async {
-           currentIndex = int.parse(message);
-        },
-        onLelinkDisConnectionToService: (dynamic message) async {
-            currentIndex = -1;
-        },
-        onLelinkPlayerError: (dynamic message) async {
-        },
-        onLelinkPlayerStatus: (dynamic message) async {
-            playStatus = LBLelinkPlayStatus.values[int.parse(message)];
-        },
-        onLelinkPlayerProgressInfo: (Map<String, dynamic> message) async {
-          // print(
-          //     'flutter--播放进度 总时长:${message['duration']}、当前播放位置:${message['currentTime']}');
-        },
-      );
-  }
-
 }
