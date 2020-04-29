@@ -38,8 +38,12 @@ class FlutterHpplay {
     _plus.setup(
         appid: appid, secretKey: secretKey, channel: channel, debug: debug);
   }
+  
+  Future<bool> get isConnected async {
+    return _plus.isConnected;
+  }
 
-   void search() {
+  void search() {
     _plus.search();
   }
 
