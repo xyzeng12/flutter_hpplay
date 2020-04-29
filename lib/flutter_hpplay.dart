@@ -2,7 +2,7 @@ import 'package:flutter_hpplay/flutter_hpplay_plus.dart';
 
 ///乐播投屏扩展插件
 class FlutterHpplay {
-  FlutterHpplayPlus plus;
+  FlutterHpplayPlus _plus;
   FlutterHpplay._();
 
   static FlutterHpplay _instance;
@@ -10,7 +10,7 @@ class FlutterHpplay {
   static FlutterHpplay getInstance() {
     if (_instance == null) {
       _instance = FlutterHpplay._();
-      _instance.plus = FlutterHpplayPlus();
+      _instance._plus = FlutterHpplayPlus();
       _instance.registerHandler();
     }
     return _instance;
@@ -35,10 +35,34 @@ class FlutterHpplay {
     String channel = '',
     bool debug = false,
   })  {
-    plus.setup(
+    _plus.setup(
         appid: appid, secretKey: secretKey, channel: channel, debug: debug);
   }
 
+   void search() {
+    _plus.search();
+  }
+
+  void deviceListDidSelectIndex(int index) {
+    _plus.deviceListDidSelectIndex(index);
+  }
+
+  void playMedia(String mediaURLString, int mediaType) {
+    _plus.playMedia(mediaURLString, mediaType);
+  }
+
+  void pause() {
+    _plus.pause();
+  }
+
+  void resumePlay() {
+    _plus.resumePlay();
+  }
+
+  void stop() {
+    _plus.stop();
+  }
+  
   void addEventHandler({
     ///搜索错误
     DynamicHandler onLelinkBrowserError,
@@ -75,9 +99,8 @@ class FlutterHpplay {
     _onLelinkPlayerProgressInfo = onLelinkPlayerProgressInfo;
   }
 
-
   void registerHandler() {
-    _instance.plus.addEventHandler(
+    _plus.addEventHandler(
       onLelinkBrowserError: (dynamic message) async {
         _onLelinkBrowserError(message);
       },
