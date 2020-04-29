@@ -29,12 +29,12 @@ class FlutterHpplay {
   DynamicHandler _onLelinkPlayerStatus;
   MapHandler _onLelinkPlayerProgressInfo;
 
-  void setup(
+  void setup({
     String appid,
     String secretKey,
-    String channel,
-    bool debug,
-  ) {
+    String channel = '',
+    bool debug = false,
+  })  {
     plus.setup(
         appid: appid, secretKey: secretKey, channel: channel, debug: debug);
   }
