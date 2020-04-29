@@ -71,6 +71,7 @@ class FlutterHpplay {
     String channel = '',
     bool debug = false,
   }) {
+    registerHandler();
     print(flutterLog + "setup:");
     _channel.invokeMethod(
         'setup', {'appid': appid, 'secretKey': secretKey, 'debug': debug});
