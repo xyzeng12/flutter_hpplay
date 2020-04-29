@@ -33,6 +33,9 @@ class FlutterHpplay {
 
   final MethodChannel _channel;
   final Platform _platform;
+  List serviceNames = [];
+  int currentIndex = -1;
+  LBLelinkPlayStatus playStatus;
 
   @visibleForTesting
   FlutterHpplay.private(MethodChannel channel, Platform platform)
@@ -165,4 +168,32 @@ class FlutterHpplay {
         throw new UnsupportedError("Unrecognized Event");
     }
   }
+
+  void registerHandler(){
+    _instance.addEventHandler(
+        onLelinkBrowserError: (dynamic message) async {
+        },
+        onLelinkBrowserDidFindLelinkServices: (dynamic message) async {
+          serviceNames = message;
+        },
+        onLelinkConnectionError: (dynamic message) async {
+        },
+        onLelinkDidConnectionToService: (dynamic message) async {
+           currentIndex = int.parse(message);
+        },
+        onLelinkDisConnectionToService: (dynamic message) async {
+            currentIndex = -1;
+        },
+        onLelinkPlayerError: (dynamic message) async {
+        },
+        onLelinkPlayerStatus: (dynamic message) async {
+            playStatus = LBLelinkPlayStatus.values[int.parse(message)];
+        },
+        onLelinkPlayerProgressInfo: (Map<String, dynamic> message) async {
+          // print(
+          //     'flutter--播放进度 总时长:${message['duration']}、当前播放位置:${message['currentTime']}');
+        },
+      );
+  }
+
 }

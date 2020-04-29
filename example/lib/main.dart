@@ -37,7 +37,7 @@ class _MyAppState extends State<MyApp> {
         onLelinkBrowserError: (dynamic message) async {
           print('flutter--搜索错误: $message');
         },
-        onLelinkBrowserDidFindLelinkServices: (var message) async {
+        onLelinkBrowserDidFindLelinkServices: (dynamic message) async {
           setState(() {
             datas = message;
           });
