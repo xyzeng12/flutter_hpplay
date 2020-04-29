@@ -36,11 +36,11 @@ class FlutterHpplay {
     String secretKey,
     String channel = '',
     bool debug = false,
-  })  {
+  }) {
     _plus.setup(
         appid: appid, secretKey: secretKey, channel: channel, debug: debug);
   }
-  
+
   Future<bool> get isConnected async {
     return _plus.isConnected;
   }
@@ -57,7 +57,7 @@ class FlutterHpplay {
     _plus.playMedia(mediaURLString, mediaType.index);
   }
 
-  void seekTo(int seek){
+  void seekTo(int seek) {
     _plus.seekTo(seek);
   }
 
@@ -72,7 +72,7 @@ class FlutterHpplay {
   void stop() {
     _plus.stop();
   }
-  
+
   void addEventHandler({
     ///搜索错误
     DynamicHandler onLelinkBrowserError,
@@ -130,15 +130,16 @@ class FlutterHpplay {
         _onLelinkDisConnectionToService(message);
       },
       onLelinkPlayerError: (dynamic message) async {
-        _onLelinkPlayerError(message);},
+        _onLelinkPlayerError(message);
+      },
       onLelinkPlayerStatus: (dynamic message) async {
         playStatus = LBLelinkPlayStatus.values[int.parse(message)];
         _onLelinkPlayerStatus(message);
       },
       onLelinkPlayerProgressInfo: (Map<String, dynamic> message) async {
-        _onLelinkPlayerProgressInfo(message);
         duration = int.parse(message['duration']);
         currentTime = int.parse(message['currentTime']);
+        _onLelinkPlayerProgressInfo(message);
         // print(
         //     'flutter--播放进度 总时长:${message['duration']}、当前播放位置:${message['currentTime']}');
       },
