@@ -64,6 +64,8 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
     [self deviceListDidSelectIndex:call result: result];
   }else if([@"playMedia" isEqualToString:call.method]) {
     [self playMedia:call result: result];
+  }else if([@"seekTo" isEqualToString:call.method]) {
+    [self seekTo:call result: result];
   }else if([@"pause" isEqualToString:call.method]) {
     [self pause:call result: result];
   }else if([@"resumePlay" isEqualToString:call.method]) {
@@ -122,6 +124,12 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
         [alertController addAction:okAction];
         [alertController showViewController:[UIApplication sharedApplication].keyWindow.rootViewController sender:nil];
     }
+}
+
+- (void)seekTo:(FlutterMethodCall*)call result:(FlutterResult)result {
+    NSDictionary *arguments = call.arguments;
+    NSInteger seek = [arguments[@"seek"] integerValue];
+    [[LBLelinkKitManager sharedManager].lelinkPlayer seekTo:seek];
 }
 
 - (void)pause:(FlutterMethodCall*)call result:(FlutterResult)result {

@@ -57,6 +57,10 @@ class FlutterHpplay {
     _plus.playMedia(mediaURLString, mediaType);
   }
 
+  void seekTo(int seek){
+    _plus.seekTo(seek);
+  }
+
   void pause() {
     _plus.pause();
   }

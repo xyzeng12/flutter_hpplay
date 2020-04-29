@@ -86,6 +86,10 @@ class FlutterHpplayPlus {
         {'mediaURLString': mediaURLString, 'mediaType': mediaType});
   }
 
+  void seekTo(int seek){
+    _channel.invokeMethod('deviceListDidSelectIndex', {'seek': seek});
+  }
+
   void pause() {
     _channel.invokeMethod('pause');
   }
