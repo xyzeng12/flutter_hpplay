@@ -53,8 +53,8 @@ class FlutterHpplay {
     _plus.deviceListDidSelectIndex(index);
   }
 
-  void playMedia(String mediaURLString, int mediaType) {
-    _plus.playMedia(mediaURLString, mediaType);
+  void playMedia(String mediaURLString, LBLelinkMediaType mediaType) {
+    _plus.playMedia(mediaURLString, mediaType.index);
   }
 
   void seekTo(int seek){
