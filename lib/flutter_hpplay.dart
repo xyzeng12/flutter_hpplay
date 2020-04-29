@@ -19,6 +19,8 @@ class FlutterHpplay {
   List serviceNames = [];
   int currentIndex = -1;
   LBLelinkPlayStatus playStatus;
+  double duration;
+  double currentTime;
 
   DynamicHandler _onLelinkBrowserError;
   DynamicHandler _onLelinkBrowserDidFindLelinkServices;
@@ -131,6 +133,8 @@ class FlutterHpplay {
       },
       onLelinkPlayerProgressInfo: (Map<String, dynamic> message) async {
         _onLelinkPlayerProgressInfo(message);
+        duration = double.parse(message['duration']);
+        currentTime = double.parse(message['currentTime']);
         // print(
         //     'flutter--播放进度 总时长:${message['duration']}、当前播放位置:${message['currentTime']}');
       },
