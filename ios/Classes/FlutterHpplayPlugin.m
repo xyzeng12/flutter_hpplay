@@ -79,7 +79,7 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
   }else if([@"reduceVolume" isEqualToString:call.method]) {
     [self reduceVolume:call result: result];
   }else if([@"isIntoBg" isEqualToString:call.method]) {
-      self.volumeKeyObserver.isIntoBg = YES;
+      [self isIntoBg:call result: result];
   }else {
     result(FlutterMethodNotImplemented);
   }
@@ -175,6 +175,11 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
     if ([LBLelinkKitManager sharedManager].currentConnection.isConnected) {
         [[LBLelinkKitManager sharedManager].lelinkPlayer reduceVolume];
     }
+}
+
+- (void)isIntoBg:(FlutterMethodCall*)call result:(FlutterResult)result {
+    NSDictionary *arguments = call.arguments;
+    self.volumeKeyObserver.isIntoBg = [arguments[@"isIntoBg"] boolValue];
 }
 
 - (void)setup:(FlutterMethodCall*)call result:(FlutterResult)result {

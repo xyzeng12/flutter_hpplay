@@ -86,7 +86,7 @@ class FlutterHpplayPlus {
         {'mediaURLString': mediaURLString, 'mediaType': mediaType});
   }
 
-  void seekTo(int seek){
+  void seekTo(int seek) {
     _channel.invokeMethod('seekTo', {'seek': seek});
   }
 
@@ -100,6 +100,18 @@ class FlutterHpplayPlus {
 
   void stop() {
     _channel.invokeMethod('stop');
+  }
+
+  void addVolume() {
+    _channel.invokeMethod('addVolume');
+  }
+
+  void reduceVolume() {
+    _channel.invokeMethod('reduceVolume');
+  }
+
+  void isIntoBg(int isIntoBg) {
+    _channel.invokeMethod('isIntoBg', {'isIntoBg': isIntoBg});
   }
 
   ///
@@ -169,5 +181,4 @@ class FlutterHpplayPlus {
         throw new UnsupportedError("Unrecognized Event");
     }
   }
-
 }

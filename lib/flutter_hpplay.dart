@@ -73,6 +73,18 @@ class FlutterHpplay {
     _plus.stop();
   }
 
+  void addVolume() {
+    _plus.stop();
+  }
+
+  void reduceVolume() {
+    _plus.stop();
+  }
+
+  void isIntoBg(int isIntoBg) {
+    _plus.isIntoBg(isIntoBg);
+  }
+
   void addEventHandler({
     ///搜索错误
     DynamicHandler onLelinkBrowserError,
