@@ -1,5 +1,6 @@
 #import "FlutterHpplayPlugin.h"
 #import "LBLelinkKitManager/LBLelinkKitManager.h"
+#import "LBSystemVolumeKeyObserver.h"
 #import <UIKit/UIKit.h>
 /**
 step 1: 导入头文件
@@ -29,6 +30,7 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
 @interface FlutterHpplayPlugin ()
 
 @property (nonatomic, assign) LBVideoCastState castState;
+@property (nonatomic, strong) LBSystemVolumeKeyObserver *volumeKeyObserver;
 
 @end
 
@@ -97,6 +99,8 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
 }
 
 - (void)playMedia:(FlutterMethodCall*)call result:(FlutterResult)result {
+    // 创建音量键监听
+    self.volumeKeyObserver = [[LBSystemVolumeKeyObserver alloc] init];
     NSDictionary *arguments = call.arguments;
     // 推送媒体
     if (self.castState == LBVideoCastStateCastedConnected) {

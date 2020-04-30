@@ -98,48 +98,69 @@ class FlutterHpplay {
     ///播放进度 总时长、当前播放位置
     MapHandler onLelinkPlayerProgressInfo,
   }) {
-    _onLelinkBrowserError = onLelinkBrowserError;
+    _onLelinkBrowserError = onLelinkBrowserError ?? _onLelinkBrowserError;
     _onLelinkBrowserDidFindLelinkServices =
-        onLelinkBrowserDidFindLelinkServices;
-    _onLelinkConnectionError = onLelinkConnectionError;
-    _onLelinkDidConnectionToService = onLelinkDidConnectionToService;
-    _onLelinkDisConnectionToService = onLelinkDisConnectionToService;
-    _onLelinkPlayerError = onLelinkPlayerError;
-    _onLelinkPlayerStatus = onLelinkPlayerStatus;
-    _onLelinkPlayerProgressInfo = onLelinkPlayerProgressInfo;
+        onLelinkBrowserDidFindLelinkServices ??
+            _onLelinkBrowserDidFindLelinkServices;
+    _onLelinkConnectionError =
+        onLelinkConnectionError ?? _onLelinkConnectionError;
+    _onLelinkDidConnectionToService =
+        onLelinkDidConnectionToService ?? _onLelinkDidConnectionToService;
+    _onLelinkDisConnectionToService =
+        onLelinkDisConnectionToService ?? _onLelinkDisConnectionToService;
+    _onLelinkPlayerError = onLelinkPlayerError ?? _onLelinkPlayerError;
+    _onLelinkPlayerStatus = onLelinkPlayerStatus ?? _onLelinkPlayerStatus;
+    _onLelinkPlayerProgressInfo =
+        onLelinkPlayerProgressInfo ?? _onLelinkPlayerProgressInfo;
   }
 
   void registerHandler() {
     _plus.addEventHandler(
       onLelinkBrowserError: (dynamic message) async {
-        _onLelinkBrowserError(message);
+        if (_onLelinkBrowserError != null) {
+          _onLelinkBrowserError(message);
+        }
       },
       onLelinkBrowserDidFindLelinkServices: (dynamic message) async {
         serviceNames = message;
-        _onLelinkBrowserDidFindLelinkServices(message);
+        if (_onLelinkBrowserDidFindLelinkServices != null) {
+          _onLelinkBrowserDidFindLelinkServices(message);
+        }
       },
       onLelinkConnectionError: (dynamic message) async {
-        _onLelinkConnectionError(message);
+        if (_onLelinkConnectionError != null) {
+          _onLelinkConnectionError(message);
+        }
       },
       onLelinkDidConnectionToService: (dynamic message) async {
         currentIndex = int.parse(message);
-        _onLelinkDidConnectionToService(message);
+        if (_onLelinkDidConnectionToService != null) {
+          _onLelinkDidConnectionToService(message);
+        }
       },
       onLelinkDisConnectionToService: (dynamic message) async {
         currentIndex = -1;
-        _onLelinkDisConnectionToService(message);
+        if (_onLelinkDisConnectionToService != null) {
+          _onLelinkDisConnectionToService(message);
+        }
       },
       onLelinkPlayerError: (dynamic message) async {
-        _onLelinkPlayerError(message);
+        if (_onLelinkPlayerError != null) {
+          _onLelinkPlayerError(message);
+        }
       },
       onLelinkPlayerStatus: (dynamic message) async {
         playStatus = LBLelinkPlayStatus.values[int.parse(message)];
-        _onLelinkPlayerStatus(message);
+        if (_onLelinkPlayerStatus != null) {
+          _onLelinkPlayerStatus(message);
+        }
       },
       onLelinkPlayerProgressInfo: (Map<String, dynamic> message) async {
         duration = int.parse(message['duration']);
         currentTime = int.parse(message['currentTime']);
-        _onLelinkPlayerProgressInfo(message);
+        if (_onLelinkPlayerProgressInfo != null) {
+          _onLelinkPlayerProgressInfo(message);
+        }
         // print(
         //     'flutter--播放进度 总时长:${message['duration']}、当前播放位置:${message['currentTime']}');
       },
