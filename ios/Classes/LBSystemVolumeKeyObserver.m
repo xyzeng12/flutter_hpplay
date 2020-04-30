@@ -7,6 +7,7 @@
 //
 
 #import "LBSystemVolumeKeyObserver.h"
+#import "LBLelinkKitManager.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h>
