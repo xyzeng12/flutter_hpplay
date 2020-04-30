@@ -45,42 +45,52 @@ class FlutterHpplay {
     return _plus.isConnected;
   }
 
+  ///搜索设备
   void search() {
     _plus.search();
   }
 
+   ///连接设备 index：索引
   void deviceListDidSelectIndex(int index) {
     _plus.deviceListDidSelectIndex(index);
   }
 
+   ///播放
   void playMedia(String mediaURLString, LBLelinkMediaType mediaType) {
     _plus.playMedia(mediaURLString, mediaType.index);
   }
 
+   ///滚动进度
   void seekTo(int seek) {
     _plus.seekTo(seek);
   }
 
+   ///暂停
   void pause() {
     _plus.pause();
   }
 
+   ///继续播放
   void resumePlay() {
     _plus.resumePlay();
   }
 
+   ///停止投屏
   void stop() {
     _plus.stop();
   }
 
+  ///加音量
   void addVolume() {
     _plus.addVolume();
   }
-
+  
+  ///减音量
   void reduceVolume() {
     _plus.reduceVolume();
   }
 
+  ///控制音量物理按键是否有效
   void isIntoBg(int isIntoBg) {
     _plus.isIntoBg(isIntoBg);
   }
