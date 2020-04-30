@@ -11,12 +11,6 @@
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h>
 
-@interface LBSystemVolumeKeyObserver ()
-
-@property (nonatomic, assign) BOOL isIntoBg;
-
-@end
-
 @implementation LBSystemVolumeKeyObserver
 
 - (instancetype)init {

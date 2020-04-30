@@ -1,6 +1,7 @@
 #import "FlutterHpplayPlugin.h"
 #import "LBLelinkKitManager/LBLelinkKitManager.h"
 #import "LBSystemVolumeKeyObserver.h"
+#import "LBSystemVolumeKeyObserver.m"
 #import <UIKit/UIKit.h>
 /**
 step 1: 导入头文件
