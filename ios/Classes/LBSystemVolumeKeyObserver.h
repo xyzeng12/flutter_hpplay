@@ -18,6 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface LBSystemVolumeKeyObserver : NSObject
 
+@property (nonatomic, assign) BOOL isIntoBg;
+
 @end
 
 NS_ASSUME_NONNULL_END

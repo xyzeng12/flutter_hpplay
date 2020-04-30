@@ -74,6 +74,12 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
     [self resumePlay:call result: result];
   }else if([@"stop" isEqualToString:call.method]) {
     [self stop:call result: result];
+  }else if([@"addVolume" isEqualToString:call.method]) {
+    [self addVolume:call result: result];
+  }else if([@"reduceVolume" isEqualToString:call.method]) {
+    [self reduceVolume:call result: result];
+  }else if([@"isIntoBg" isEqualToString:call.method]) {
+      self.volumeKeyObserver.isIntoBg = YES;
   }else {
     result(FlutterMethodNotImplemented);
   }
@@ -99,8 +105,7 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
 }
 
 - (void)playMedia:(FlutterMethodCall*)call result:(FlutterResult)result {
-    // 创建音量键监听
-    self.volumeKeyObserver = [[LBSystemVolumeKeyObserver alloc] init];
+    self.volumeKeyObserver.isIntoBg = NO;
     NSDictionary *arguments = call.arguments;
     // 推送媒体
     if (self.castState == LBVideoCastStateCastedConnected) {
@@ -131,17 +136,24 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
 }
 
 - (void)seekTo:(FlutterMethodCall*)call result:(FlutterResult)result {
-    NSDictionary *arguments = call.arguments;
-    NSInteger seek = [arguments[@"seek"] integerValue];
-    [[LBLelinkKitManager sharedManager].lelinkPlayer seekTo:seek];
+     if ([LBLelinkKitManager sharedManager].currentConnection.isConnected) {
+         NSDictionary *arguments = call.arguments;
+         NSInteger seek = [arguments[@"seek"] integerValue];
+         [[LBLelinkKitManager sharedManager].lelinkPlayer seekTo:seek];
+    }
 }
 
 - (void)pause:(FlutterMethodCall*)call result:(FlutterResult)result {
-    [[LBLelinkKitManager sharedManager].lelinkPlayer pause];
+    if ([LBLelinkKitManager sharedManager].currentConnection.isConnected) {
+        [[LBLelinkKitManager sharedManager].lelinkPlayer pause];
+    }
 }
 
 - (void)resumePlay:(FlutterMethodCall*)call result:(FlutterResult)result {
-    [[LBLelinkKitManager sharedManager].lelinkPlayer resumePlay];
+    if ([LBLelinkKitManager sharedManager].currentConnection.isConnected) {
+        [[LBLelinkKitManager sharedManager].lelinkPlayer resumePlay];
+    }
+    
 }
 
 - (void)stop:(FlutterMethodCall*)call result:(FlutterResult)result {
@@ -150,6 +162,18 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
         self.castState = LBVideoCastStateUnCastConnected;
     }else{
         self.castState = LBVideoCastStateUnCastUnConnect;
+    }
+}
+
+- (void)addVolume:(FlutterMethodCall*)call result:(FlutterResult)result {
+    if ([LBLelinkKitManager sharedManager].currentConnection.isConnected) {
+        [[LBLelinkKitManager sharedManager].lelinkPlayer addVolume];
+    }
+}
+
+- (void)reduceVolume:(FlutterMethodCall*)call result:(FlutterResult)result {
+    if ([LBLelinkKitManager sharedManager].currentConnection.isConnected) {
+        [[LBLelinkKitManager sharedManager].lelinkPlayer reduceVolume];
     }
 }
 
@@ -175,6 +199,8 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
         }
     });
     [LBLelinkKitManager sharedManager].channel = _channel;
+    // 创建音量键监听
+    self.volumeKeyObserver = [[LBSystemVolumeKeyObserver alloc] init];
 }
 
 #pragma mark - AppDelegate

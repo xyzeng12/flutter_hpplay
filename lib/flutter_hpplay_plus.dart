@@ -87,7 +87,7 @@ class FlutterHpplayPlus {
   }
 
   void seekTo(int seek){
-    _channel.invokeMethod('deviceListDidSelectIndex', {'seek': seek});
+    _channel.invokeMethod('seekTo', {'seek': seek});
   }
 
   void pause() {
