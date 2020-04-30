@@ -60,7 +60,7 @@ class FlutterHpplay {
     _plus.playMedia(mediaURLString, mediaType.index);
   }
 
-   ///滚动进度
+   ///滚动进度 秒
   void seekTo(int seek) {
     _plus.seekTo(seek);
   }
@@ -90,7 +90,7 @@ class FlutterHpplay {
     _plus.reduceVolume();
   }
 
-  ///控制音量物理按键是否有效
+  ///控制音量物理按键是否有效 0：有效，1：无效
   void isIntoBg(int isIntoBg) {
     _plus.isIntoBg(isIntoBg);
   }
