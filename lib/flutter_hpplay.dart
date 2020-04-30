@@ -74,11 +74,11 @@ class FlutterHpplay {
   }
 
   void addVolume() {
-    _plus.stop();
+    _plus.addVolume();
   }
 
   void reduceVolume() {
-    _plus.stop();
+    _plus.reduceVolume();
   }
 
   void isIntoBg(int isIntoBg) {
