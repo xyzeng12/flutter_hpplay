@@ -45,6 +45,7 @@ import java.util.logging.Logger
 public class FlutterHpplayPlugin(private val registrar: Registrar, channel: MethodChannel) : MethodCallHandler {
 
     private var infos: MutableList<LelinkServiceInfo>? = null
+    private var connectInfos: MutableList<LelinkServiceInfo>? = null
 
     private val REQUEST_CAMERA_PERMISSION = 2
     private val REQUEST_RECORD_AUDIO_PERMISSION = 4
@@ -141,7 +142,14 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
                             }
                         }
                         STATE_SEARCH_ERROR -> {
-                            ToastUtil.show(registrar.context(), "Auth错误");
+                            if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                val message = Message()
+                                message.what = STATE_SEARCH_ERROR
+                                message.obj = deatail
+                                mDelayHandler!!.sendMessageDelayed(message,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
                         }
                         STATE_SEARCH_NO_RESULT -> {
                             if (null != mDelayHandler) {
@@ -150,37 +158,67 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
                                         TimeUnit.SECONDS.toMillis(1))
                             }
                         }
-                        STATE_CONNECT_SUCCESS -> {//todo
-
+                        STATE_CONNECT_SUCCESS -> {
+                            if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                mDelayHandler!!.sendEmptyMessageDelayed(STATE_CONNECT_SUCCESS,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
                         }
-                        STATE_DISCONNECT -> {//todo
+                        STATE_DISCONNECT -> {
+                            if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                val message = Message()
+                                message.what = STATE_DISCONNECT
+                                message.obj = deatail
+                                mDelayHandler!!.sendMessageDelayed(message,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
                         }
                         STATE_CONNECT_FAILURE -> {
-
+                            if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                val message = Message()
+                                message.what = STATE_CONNECT_FAILURE
+                                message.obj = deatail
+                                mDelayHandler!!.sendMessageDelayed(message,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
                         }
                         STATE_PLAY -> {
-                            logTest("callback play")
                             isPause = false
                             logD("ToastUtil 开始播放")
-                            ToastUtil.show(registrar.context(), "开始播放")
+                            if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                mDelayHandler!!.sendEmptyMessageDelayed(STATE_PLAY,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
                         }
                         STATE_LOADING -> {
-                            logTest("callback loading");
                             isPause = false;
-                            logD("ToastUtil 开始加载");
-                            ToastUtil.show(registrar.context(), "开始加载");
+                            logD("ToastUtil 开始加载"); if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                mDelayHandler!!.sendEmptyMessageDelayed(STATE_LOADING,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
                         }
                         STATE_PAUSE -> {
-                            logTest("callback pause");
                             isPause = true;
                             logD("ToastUtil 暂停播放");
-                            ToastUtil.show(registrar.context(), "暂停播放");
+                            if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                mDelayHandler!!.sendEmptyMessageDelayed(STATE_PAUSE,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
                         }
                         STATE_STOP -> {
-                            logTest("callback stop")
                             isPause = false
                             logD("ToastUtil 播放结束")
-                            ToastUtil.show(registrar.context(), "播放结束")
+                            if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                mDelayHandler!!.sendEmptyMessageDelayed(STATE_STOP,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
 
                         }
                         STATE_SEEK -> {
@@ -190,18 +228,28 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
 
                         }
                         STATE_PLAY_ERROR -> {
-                            logTest("callback error:" + deatail!!.text)
-                            ToastUtil.show(registrar.context(), "播放错误：" + deatail.text)
+                            if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                val message = Message()
+                                message.what = STATE_PLAY_ERROR
+                                message.obj = deatail
+                                mDelayHandler!!.sendMessageDelayed(message,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
                         }
                         STATE_POSITION_UPDATE -> {
-
                             logTest("callback position update:" + deatail!!.text)
                             val arr = deatail.obj as LongArray?
                             val duration = arr!![0]
                             val position = arr[1]
                             logD("ToastUtil 总长度：$duration 当前进度:$position")
-                            channel?.invokeMethod("playProgress",
-                                    """{"max":${duration.toInt()},"progress":${position.toInt()}}""")
+                            val message = mapOf<String, Any>(
+                                    Pair("duration", duration),
+                                    Pair("currentTime", position)
+                            )
+                            channel?.invokeMethod("onLelinkPlayerProgressInfo",
+                                    message)
+//                                    """{"max":${duration.toInt()},"progress":${position.toInt()}}""")
                         }
                         STATE_COMPLETION -> {
 
@@ -233,7 +281,7 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
             connectInfos = mLelinkHelper!!.connectInfos
         }
         when (call.method) {
-            "getPlatformVersion" -> {//todo delete
+            "getPlatformVersion" -> {
                 result.success("Android ${android.os.Build.VERSION.RELEASE}")
             }
             "getIsConnected" -> {//是否已连接
@@ -339,20 +387,45 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
         }
     }
 
-    //更新视图
+    //搜索成功
     private fun updateBrowseAdapter() {
         if (null != mLelinkHelper) {
             infos = mLelinkHelper!!.infos
-            val myInfos: MutableList<MyLelinkServiceInfo> = mutableListOf()
-            infos?.forEach {
-                myInfos.add(MyLelinkServiceInfo(it.name, it.uid, it.types))
-            }
-            val myInfosJson = Gson().toJson(myInfos)
-            logE("myInfosJson")
-            //发送myInfosJson给flutter
-            channel?.invokeMethod("browseResult", myInfosJson)
-
+            channel?.invokeMethod("onLelinkBrowserDidFindLelinkServices", infos)
         }
+    }
+
+    //搜索出错
+    private fun searchError(any: Any) {
+        channel?.invokeMethod("onLelinkBrowserError", any)
+    }
+
+    //连接成功
+    private fun updateConnectAdapter() {
+        if (null != mLelinkHelper) {
+            connectInfos = mLelinkHelper!!.connectInfos
+            channel?.invokeMethod("onLelinkDidConnectionToService", connectInfos)
+        }
+    }
+
+    //连接出错
+    private fun connectError(any: Any) {
+        channel?.invokeMethod("onLelinkConnectionError", any)
+    }
+
+    //断开连接
+    private fun disConnect(any: Any) {
+        channel?.invokeMethod("onLelinkDisConnectionToService", any)
+    }
+
+    //播放错误
+    private fun playError(any: Any) {
+        channel?.invokeMethod("onLelinkPlayerError", any)
+    }
+
+    //播放错误
+    private fun onLelinkPlayerStatus(status: Int) {
+        channel?.invokeMethod("onLelinkPlayerStatus", status)
     }
 
     private fun deviceListDidSelectIndex(call: MethodCall, result: Result) {
@@ -503,6 +576,18 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
             val mainActivity: FlutterHpplayPlugin = mReference.get() ?: return
             when (msg.what) {
                 STATE_SEARCH_SUCCESS -> mainActivity.updateBrowseAdapter()
+                STATE_SEARCH_ERROR -> mainActivity.searchError(msg.obj)
+                STATE_CONNECT_SUCCESS -> mainActivity.updateConnectAdapter()
+                STATE_CONNECT_FAILURE -> mainActivity.connectError(msg.obj)
+                STATE_DISCONNECT -> mainActivity.disConnect(msg.obj)
+                STATE_PLAY_ERROR -> {
+                    mainActivity.playError(msg.obj)
+                    mainActivity.onLelinkPlayerStatus(6)//播放错误
+                }
+                STATE_LOADING -> mainActivity.onLelinkPlayerStatus(1)//正在加载
+                STATE_PLAY -> mainActivity.onLelinkPlayerStatus(2)//正在播放
+                STATE_PAUSE ->mainActivity.onLelinkPlayerStatus(3)//暂停状态
+                STATE_COMPLETION -> mainActivity.onLelinkPlayerStatus(5)//播放完成
             }
             super.handleMessage(msg)
         }
