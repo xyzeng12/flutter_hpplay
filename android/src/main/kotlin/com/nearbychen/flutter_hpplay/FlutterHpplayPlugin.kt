@@ -388,7 +388,7 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
     }
 
     //搜索成功
-    private fun updateBrowseAdapter() {
+      fun updateBrowseAdapter() {
         if (null != mLelinkHelper) {
             infos = mLelinkHelper!!.infos
             channel?.invokeMethod("onLelinkBrowserDidFindLelinkServices", infos)
@@ -396,12 +396,12 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
     }
 
     //搜索出错
-    private fun searchError(any: Any) {
+      fun searchError(any: Any) {
         channel?.invokeMethod("onLelinkBrowserError", any)
     }
 
     //连接成功
-    private fun updateConnectAdapter() {
+      fun updateConnectAdapter() {
         if (null != mLelinkHelper) {
             connectInfos = mLelinkHelper!!.connectInfos
             channel?.invokeMethod("onLelinkDidConnectionToService", connectInfos)
@@ -409,22 +409,22 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
     }
 
     //连接出错
-    private fun connectError(any: Any) {
+      fun connectError(any: Any) {
         channel?.invokeMethod("onLelinkConnectionError", any)
     }
 
     //断开连接
-    private fun disConnect(any: Any) {
+      fun disConnect(any: Any) {
         channel?.invokeMethod("onLelinkDisConnectionToService", any)
     }
 
     //播放错误
-    private fun playError(any: Any) {
+      fun playError(any: Any) {
         channel?.invokeMethod("onLelinkPlayerError", any)
     }
 
     //播放错误
-    private fun onLelinkPlayerStatus(status: Int) {
+      fun onLelinkPlayerStatus(status: Int) {
         channel?.invokeMethod("onLelinkPlayerStatus", status)
     }
 
