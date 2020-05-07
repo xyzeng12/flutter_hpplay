@@ -40,7 +40,6 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.TimeUnit
-import java.util.logging.Logger
 
 public class FlutterHpplayPlugin(private val registrar: Registrar, channel: MethodChannel) : MethodCallHandler {
 
@@ -129,6 +128,7 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
             mLelinkHelper = LelinkHelper.getInstance(registrar.context());
             val mUIUpdateListener = object : IUIUpdateListener {
                 override fun onUpdate(what: Int, deatail: MessageDeatail?) {
+//                    Log.i("xyzeng", "initLelinkHelper——onUpdate:${what}")
                     when (what) {
                         STATE_SEARCH_SUCCESS -> {
                             if (isFirstBrowse) {
@@ -238,26 +238,44 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
                             }
                         }
                         STATE_POSITION_UPDATE -> {
-                            logTest("callback position update:" + deatail!!.text)
-                            val arr = deatail.obj as LongArray?
+                            isPause = false
+                            val arr = deatail?.obj as LongArray?
                             val duration = arr!![0]
                             val position = arr[1]
-                            logD("ToastUtil 总长度：$duration 当前进度:$position")
+//                            logD("ToastUtil 总长度：$duration 当前进度:$position")
                             val message = mapOf<String, Any>(
                                     Pair("duration", duration),
                                     Pair("currentTime", position)
                             )
                             channel?.invokeMethod("onLelinkPlayerProgressInfo",
                                     message)
+                            channel?.invokeMethod("onLelinkPlayerStatus", 2)
+
 //                                    """{"max":${duration.toInt()},"progress":${position.toInt()}}""")
                         }
                         STATE_COMPLETION -> {
+                            isPause = false
+                            logD("播放完成")
+                            if (null != mDelayHandler) {
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                mDelayHandler!!.sendEmptyMessageDelayed(STATE_COMPLETION,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
 
                         }
                         STATE_INPUT_SCREENCODE -> {
 
                         }
                         RELEVANCE_DATA_UNSUPPORT -> {
+                            if (null != mDelayHandler) {
+                                ToastUtil.show(registrar.context(), deatail!!.text!!)
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                val message = Message()
+                                message.what = RELEVANCE_DATA_UNSUPPORT
+                                message.obj = deatail
+                                mDelayHandler!!.sendMessageDelayed(message,
+                                        TimeUnit.SECONDS.toMillis(1))
+                            }
 
                         }
                         STATE_SCREENSHOT -> {
@@ -300,6 +318,7 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
                 connect(call, result)
             }
             "playMedia" -> {//播放
+                println("播放")
                 play(call, result)
             }
             "resumePlay" -> {//继续播放
@@ -316,6 +335,8 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
             }
             "reduceVolume" -> {//音量-
                 reduceVolume(call, result, connectInfos)
+            }
+            "isIntoBg" -> {// todo
             }
             "volumProgress" -> {//音量条
                 volumProgress(call, result)
@@ -341,7 +362,7 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
         } else {
             ToastUtil.show(registrar.context(), "未初始化")
         }
-        isDebug = debug
+        inProduction = debug
     }
 
     private fun search(call: MethodCall, result: Result) {
@@ -377,7 +398,6 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
                 type = ILelinkServiceManager.TYPE_ALL
             }
             logTest("browse type:$text")
-            logD("browse type:$text")
             if (!isFirstBrowse) {
                 isFirstBrowse = true
             }
@@ -388,43 +408,53 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
     }
 
     //搜索成功
-      fun updateBrowseAdapter() {
+    fun updateBrowseAdapter() {
+        logE("updateBrowseAdapter")
         if (null != mLelinkHelper) {
             infos = mLelinkHelper!!.infos
-            channel?.invokeMethod("onLelinkBrowserDidFindLelinkServices", infos)
+            val myInfos: MutableList<MyLelinkServiceInfo> = mutableListOf()
+            infos?.forEach {
+                myInfos.add(MyLelinkServiceInfo(it.name, it.uid, it.types))
+            }
+            val myInfosJson = Gson().toJson(myInfos)
+            logE("myInfosJson:$myInfosJson")
+            //发送myInfosJson给flutter
+            channel?.invokeMethod("onLelinkBrowserDidFindLelinkServices", myInfosJson)
         }
+
     }
 
     //搜索出错
-      fun searchError(any: Any) {
+    fun searchError(any: Any) {
         channel?.invokeMethod("onLelinkBrowserError", any)
     }
 
     //连接成功
-      fun updateConnectAdapter() {
+    fun updateConnectAdapter() {
         if (null != mLelinkHelper) {
             connectInfos = mLelinkHelper!!.connectInfos
-            channel?.invokeMethod("onLelinkDidConnectionToService", connectInfos)
+            val index = infos?.indexOf(connectInfos?.get(0))
+            channel?.invokeMethod("onLelinkDidConnectionToService", "$index")
         }
     }
 
     //连接出错
-      fun connectError(any: Any) {
+    fun connectError(any: Any) {
         channel?.invokeMethod("onLelinkConnectionError", any)
     }
 
     //断开连接
-      fun disConnect(any: Any) {
+    fun disConnect(any: Any) {
         channel?.invokeMethod("onLelinkDisConnectionToService", any)
     }
 
     //播放错误
-      fun playError(any: Any) {
+    fun playError(any: Any) {
         channel?.invokeMethod("onLelinkPlayerError", any)
     }
 
     //播放错误
-      fun onLelinkPlayerStatus(status: Int) {
+    fun onLelinkPlayerStatus(status: Int) {
         channel?.invokeMethod("onLelinkPlayerStatus", status)
     }
 
@@ -440,6 +470,7 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
             logI("开始连接" + info?.name)
             if (info != null) {
                 if (null != mLelinkHelper) {
+                    logI("选中了:" + info.name + " type:" + info.types)
                     ToastUtil.show(registrar.context(), "选中了:" + info.name
                             + " type:" + info.types)
                     mLelinkHelper!!.connect(info)
@@ -490,26 +521,73 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
         }
     }
 
+    var playUrl: String? = null
+    var playMediaType: Int = 0
     private fun play(call: MethodCall, result: Result) {
         if (null == mLelinkHelper) {
             ToastUtil.show(registrar.context(), "未初始化或未选择设备")
             return
         }
+        println("isPause:$isPause")
+
+        val map = call.arguments<HashMap<String, Any>>()
         if (isPause) {
             isPause = false
             // 暂停中
             mLelinkHelper!!.resume()
             return
         }
-        val map = call.arguments<HashMap<String, Any>>()
-        val mediaType = map["mediaType"] as Int//101音乐102视频103图片
-        val url = map["mediaURLString"] as String
-        val isLocalFile =
+
+        var isLocalFile =
                 if (map == null || map["isLocalFile"] == null) {
-                    true
+                    false
                 } else {
                     map["isLocalFile"] as Boolean
                 }
+        //101音乐102视频103图片
+        playMediaType =
+                if (map == null || map["mediaType"] == null) {
+                    playMediaType
+                } else {
+                    map["mediaType"] as Int
+                }
+        playUrl =
+                if (map == null || map["mediaURLString"] == null) {
+                    playUrl
+                } else {
+                    map["mediaURLString"] as String
+                }
+
+
+
+
+        when (playMediaType) {
+            0 -> {//在线视频媒体类型
+                playMediaType = 102
+                isLocalFile = false
+            }
+            1 -> {//在线音频媒体类型
+                playMediaType = 101
+                isLocalFile = false
+            }
+            2 -> {//在线图片媒体类型
+                playMediaType = 103
+                isLocalFile = false
+            }
+            3 -> {//本地图片媒体类型
+                playMediaType = 103
+                isLocalFile = true
+            }
+            4 -> {//本地视频媒体类型 注意：需要APP层启动本地的webServer，生成一个本地视频的URL
+                playMediaType = 102
+                isLocalFile = true
+            }
+            5 -> {//本地音频媒体类型 注意：需要APP层启动本地的webServer，生成一个本地音频的URL
+                playMediaType = 101
+                isLocalFile = true
+            }
+        }
+
         isPlayMirror = false
 
         val connectInfos = mLelinkHelper!!.connectInfos
@@ -518,11 +596,11 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
             ToastUtil.show(registrar.context(), "请先连接设备")
             return
         }
-        logTest("start play url:$url type:$mediaType")
+        logTest("start play url:$playUrl type:$playMediaType")
         if (isLocalFile) { // 本地media
-            mLelinkHelper!!.playLocalMedia(url, mediaType, mScreencode)
+            mLelinkHelper!!.playLocalMedia(playUrl, playMediaType, mScreencode)
         } else { // 网络media
-            mLelinkHelper!!.playNetMedia(url, mediaType, mScreencode)
+            mLelinkHelper!!.playNetMedia(playUrl, playMediaType, mScreencode)
         }
     }
 
@@ -535,6 +613,7 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
 
     private fun stop(call: MethodCall, result: Result, connectInfos: List<LelinkServiceInfo?>?) {
         if (null != mLelinkHelper && null != connectInfos && !connectInfos.isEmpty()) {
+            logE("结束投屏")
             mLelinkHelper!!.stop()
         } else {
             ToastUtil.show(registrar.context(), "请先连接设备")
@@ -543,6 +622,7 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
 
     private fun addVolume(call: MethodCall, result: Result, connectInfos: List<LelinkServiceInfo?>?) {
         if (null != mLelinkHelper && null != connectInfos && !connectInfos.isEmpty()) {
+            logTest("addVolume click")
             mLelinkHelper!!.voulumeUp()
         } else {
             ToastUtil.show(registrar.context(), "请先连接设备")
@@ -567,27 +647,32 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
     private fun seekTo(call: MethodCall, result: Result) {
         val map = call.arguments<HashMap<String, Any>>()
         val progress = map["seek"] as Int
+        Log.i("xyzeng", "progres$progress")
         mLelinkHelper!!.seekTo(progress)
     }
 
     private class UIHandler internal constructor(reference: FlutterHpplayPlugin) : Handler() {
         private val mReference: WeakReference<FlutterHpplayPlugin>
         override fun handleMessage(msg: Message) {
-            val mainActivity: FlutterHpplayPlugin = mReference.get() ?: return
+            Log.i("xyzeng", "handleMessage:${msg.what}")
+            val flutterHpplayPlugin: FlutterHpplayPlugin = mReference.get() ?: return
             when (msg.what) {
-                STATE_SEARCH_SUCCESS -> mainActivity.updateBrowseAdapter()
-                STATE_SEARCH_ERROR -> mainActivity.searchError(msg.obj)
-                STATE_CONNECT_SUCCESS -> mainActivity.updateConnectAdapter()
-                STATE_CONNECT_FAILURE -> mainActivity.connectError(msg.obj)
-                STATE_DISCONNECT -> mainActivity.disConnect(msg.obj)
+                STATE_SEARCH_SUCCESS -> flutterHpplayPlugin.updateBrowseAdapter()
+                STATE_SEARCH_ERROR -> flutterHpplayPlugin.searchError(msg.obj)
+                STATE_CONNECT_SUCCESS -> flutterHpplayPlugin.updateConnectAdapter()
+                STATE_CONNECT_FAILURE -> flutterHpplayPlugin.connectError(msg.obj)
+                STATE_DISCONNECT -> flutterHpplayPlugin.disConnect(msg.obj)
                 STATE_PLAY_ERROR -> {
-                    mainActivity.playError(msg.obj)
-                    mainActivity.onLelinkPlayerStatus(6)//播放错误
+                    flutterHpplayPlugin.playError(msg.obj)
+                    flutterHpplayPlugin.onLelinkPlayerStatus(6)//播放错误
                 }
-                STATE_LOADING -> mainActivity.onLelinkPlayerStatus(1)//正在加载
-                STATE_PLAY -> mainActivity.onLelinkPlayerStatus(2)//正在播放
-                STATE_PAUSE ->mainActivity.onLelinkPlayerStatus(3)//暂停状态
-                STATE_COMPLETION -> mainActivity.onLelinkPlayerStatus(5)//播放完成
+                STATE_LOADING -> flutterHpplayPlugin.onLelinkPlayerStatus(1)//正在加载
+                STATE_PLAY -> flutterHpplayPlugin.onLelinkPlayerStatus(2)//正在播放
+                STATE_PAUSE -> flutterHpplayPlugin.onLelinkPlayerStatus(3)//暂停状态
+                STATE_COMPLETION -> flutterHpplayPlugin.onLelinkPlayerStatus(5)//播放完成
+                STATE_STOP -> flutterHpplayPlugin.onLelinkPlayerStatus(4)//播放结束
+                RELEVANCE_DATA_UNSUPPORT ->
+                    flutterHpplayPlugin.onLelinkPlayerStatus(6)//播放错误
             }
             super.handleMessage(msg)
         }

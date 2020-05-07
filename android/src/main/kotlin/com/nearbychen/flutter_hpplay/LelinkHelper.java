@@ -507,7 +507,7 @@ public class LelinkHelper {
          */
         @Override
         public void onPositionUpdate(long duration, long position) {
-            logD("onPositionUpdate duration:" + duration + " position:" + position);
+//            logD("onPositionUpdate duration:" + duration + " position:" + position);
             long[] arr = new long[]{duration, position};
             if (null != mUIHandler) {
                 mUIHandler.sendMessage(buildMessageDetail(IUIUpdateListener.STATE_POSITION_UPDATE, "进度更新", arr));
