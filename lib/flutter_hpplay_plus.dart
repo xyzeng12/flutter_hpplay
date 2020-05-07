@@ -29,6 +29,7 @@ enum LBLelinkPlayStatus {
 
 class FlutterHpplayPlus {
   final String flutterLog = "| Hpplay | Flutter | ";
+
   factory FlutterHpplayPlus() => _instance;
 
   final MethodChannel _channel;
@@ -39,8 +40,8 @@ class FlutterHpplayPlus {
       : _channel = channel,
         _platform = platform;
 
-  static final FlutterHpplayPlus _instance = FlutterHpplayPlus.private(
-      const MethodChannel('flutter_hpplay'), const LocalPlatform());
+  static final FlutterHpplayPlus _instance =
+      FlutterHpplayPlus.private(const MethodChannel('flutter_hpplay'), const LocalPlatform());
 
   DynamicHandler _onLelinkBrowserError;
   DynamicHandler _onLelinkBrowserDidFindLelinkServices;
@@ -69,12 +70,11 @@ class FlutterHpplayPlus {
     bool debug = false,
   }) {
     print(flutterLog + "setup:");
-    _channel.invokeMethod(
-        'setup', {'appid': appid, 'secretKey': secretKey, 'debug': debug});
+    _channel.invokeMethod('setup', {'appid': appid, 'secretKey': secretKey, 'debug': debug});
   }
 
   void search() {
-    _channel.invokeMethod('search');
+    _channel.invokeMethod('search', {"isLelinkOpen": true, "isDLNAOpen": true});
   }
 
   void deviceListDidSelectIndex(int index) {
@@ -83,7 +83,7 @@ class FlutterHpplayPlus {
 
   void playMedia(String mediaURLString, int mediaType) {
     _channel.invokeMethod('playMedia',
-        {'mediaURLString': mediaURLString, 'mediaType': mediaType});
+        {'mediaURLString': mediaURLString, 'mediaType': mediaType, 'isLocalFile': false});
   }
 
   void seekTo(int seek) {
@@ -112,6 +112,27 @@ class FlutterHpplayPlus {
 
   void isIntoBg(int isIntoBg) {
     _channel.invokeMethod('isIntoBg', {'isIntoBg': isIntoBg});
+  }
+
+  /*
+  停止搜索
+   */
+  void stopBrowse() {
+    _channel.invokeMethod('stopBrowse');
+  }
+
+  /*
+  单个连接
+   */
+  void connect(String uid) {
+    _channel.invokeMethod('connect', uid);
+  }
+
+  /*
+   *  音量条
+   */
+  void volumProgress(int progress) {
+    _channel.invokeMethod('volumProgress', progress);
   }
 
   ///
@@ -145,8 +166,7 @@ class FlutterHpplayPlus {
     print(flutterLog + "addEventHandler:");
 
     _onLelinkBrowserError = onLelinkBrowserError;
-    _onLelinkBrowserDidFindLelinkServices =
-        onLelinkBrowserDidFindLelinkServices;
+    _onLelinkBrowserDidFindLelinkServices = onLelinkBrowserDidFindLelinkServices;
     _onLelinkConnectionError = onLelinkConnectionError;
     _onLelinkDidConnectionToService = onLelinkDidConnectionToService;
     _onLelinkDisConnectionToService = onLelinkDisConnectionToService;
@@ -175,8 +195,7 @@ class FlutterHpplayPlus {
       case "onLelinkPlayerStatus":
         return _onLelinkPlayerStatus(call.arguments);
       case "onLelinkPlayerProgressInfo":
-        return _onLelinkPlayerProgressInfo(
-            call.arguments.cast<String, dynamic>());
+        return _onLelinkPlayerProgressInfo(call.arguments.cast<String, dynamic>());
       default:
         throw new UnsupportedError("Unrecognized Event");
     }

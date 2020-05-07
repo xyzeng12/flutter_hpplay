@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -19,6 +17,7 @@ class _MyAppState extends State<MyApp> {
   List datas = [];
   int currentIndex = -1;
   LBLelinkPlayStatus playStatus;
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +29,12 @@ class _MyAppState extends State<MyApp> {
     String platformVersion;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
+      hpplay.setup(
+        appid: '14138',
+        secretKey: '9a7065155a706f76e5f8a1ff9dd93cf2',
+        // debug: bool.fromEnvironment("dart.vm.product"),
+        debug: true,
+      );
       platformVersion = await hpplay.platformVersion;
       var isConnected = await hpplay.isConnected;
       print('isConnected---$isConnected');
@@ -68,17 +73,10 @@ class _MyAppState extends State<MyApp> {
           });
         },
         onLelinkPlayerProgressInfo: (Map<String, dynamic> message) async {
-          print(
-              'flutter--播放进度 总时长:${message['duration']}、当前播放位置:${message['currentTime']}');
+          print('flutter--播放进度 总时长:${message['duration']}、当前播放位置:${message['currentTime']}');
         },
       );
       hpplay.search();
-      hpplay.setup(
-        appid: '14138',
-        secretKey: '9a7065155a706f76e5f8a1ff9dd93cf2',
-        // debug: bool.fromEnvironment("dart.vm.product"),
-        debug: true,
-      );
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
@@ -103,8 +101,7 @@ class _MyAppState extends State<MyApp> {
         },
         child: Text(
           '${datas[i]['name']}',
-          style:
-              TextStyle(color: currentIndex == i ? Colors.red : Colors.black),
+          style: TextStyle(color: currentIndex == i ? Colors.red : Colors.black),
         ),
       ));
     }
@@ -137,21 +134,17 @@ class _MyAppState extends State<MyApp> {
               ),
               InkWell(
                 onTap: () {
-                  if (playStatus ==
-                      LBLelinkPlayStatus.LBLelinkPlayStatusPause) {
+                  if (playStatus == LBLelinkPlayStatus.LBLelinkPlayStatusPause) {
                     hpplay.resumePlay();
                   } else {
-                  hpplay.pause();
+                    hpplay.pause();
                   }
                 },
-                child: Text(
-                    playStatus == LBLelinkPlayStatus.LBLelinkPlayStatusPause
-                        ? '继续'
-                        : '暂停'),
+                child: Text(playStatus == LBLelinkPlayStatus.LBLelinkPlayStatusPause ? '继续' : '暂停'),
               ),
               InkWell(
                 onTap: () {
-                    hpplay.stop();
+                  hpplay.stop();
                 },
                 child: Text('停止: $_platformVersion\n'),
               ),

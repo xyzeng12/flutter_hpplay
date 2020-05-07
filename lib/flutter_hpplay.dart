@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter_hpplay/flutter_hpplay_plus.dart';
 
 ///乐播投屏扩展插件
 class FlutterHpplay {
   FlutterHpplayPlus _plus;
+
   FlutterHpplay._();
 
   static FlutterHpplay _instance;
@@ -37,8 +40,7 @@ class FlutterHpplay {
     String channel = '',
     bool debug = false,
   }) {
-    _plus.setup(
-        appid: appid, secretKey: secretKey, channel: channel, debug: debug);
+    _plus.setup(appid: appid, secretKey: secretKey, channel: channel, debug: debug);
   }
 
   Future<bool> get isConnected async {
@@ -50,32 +52,37 @@ class FlutterHpplay {
     _plus.search();
   }
 
-   ///连接设备 index：索引
+  ///停止搜索设备
+  void stopBrowse() {
+    _plus.stopBrowse();
+  }
+
+  ///连接设备 index：索引
   void deviceListDidSelectIndex(int index) {
     _plus.deviceListDidSelectIndex(index);
   }
 
-   ///播放
+  ///播放
   void playMedia(String mediaURLString, LBLelinkMediaType mediaType) {
     _plus.playMedia(mediaURLString, mediaType.index);
   }
 
-   ///滚动进度 秒
+  ///滚动进度 秒
   void seekTo(int seek) {
     _plus.seekTo(seek);
   }
 
-   ///暂停
+  ///暂停
   void pause() {
     _plus.pause();
   }
 
-   ///继续播放
+  ///继续播放
   void resumePlay() {
     _plus.resumePlay();
   }
 
-   ///停止投屏
+  ///停止投屏
   void stop() {
     _plus.stop();
   }
@@ -84,7 +91,7 @@ class FlutterHpplay {
   void addVolume() {
     _plus.addVolume();
   }
-  
+
   ///减音量
   void reduceVolume() {
     _plus.reduceVolume();
@@ -122,18 +129,15 @@ class FlutterHpplay {
   }) {
     _onLelinkBrowserError = onLelinkBrowserError ?? _onLelinkBrowserError;
     _onLelinkBrowserDidFindLelinkServices =
-        onLelinkBrowserDidFindLelinkServices ??
-            _onLelinkBrowserDidFindLelinkServices;
-    _onLelinkConnectionError =
-        onLelinkConnectionError ?? _onLelinkConnectionError;
+        onLelinkBrowserDidFindLelinkServices ?? _onLelinkBrowserDidFindLelinkServices;
+    _onLelinkConnectionError = onLelinkConnectionError ?? _onLelinkConnectionError;
     _onLelinkDidConnectionToService =
         onLelinkDidConnectionToService ?? _onLelinkDidConnectionToService;
     _onLelinkDisConnectionToService =
         onLelinkDisConnectionToService ?? _onLelinkDisConnectionToService;
     _onLelinkPlayerError = onLelinkPlayerError ?? _onLelinkPlayerError;
     _onLelinkPlayerStatus = onLelinkPlayerStatus ?? _onLelinkPlayerStatus;
-    _onLelinkPlayerProgressInfo =
-        onLelinkPlayerProgressInfo ?? _onLelinkPlayerProgressInfo;
+    _onLelinkPlayerProgressInfo = onLelinkPlayerProgressInfo ?? _onLelinkPlayerProgressInfo;
   }
 
   void registerHandler() {
@@ -144,9 +148,13 @@ class FlutterHpplay {
         }
       },
       onLelinkBrowserDidFindLelinkServices: (dynamic message) async {
-        serviceNames = message;
+        if (message is List) {
+          serviceNames = message;
+        } else {
+          serviceNames = json.decode(message);
+        }
         if (_onLelinkBrowserDidFindLelinkServices != null) {
-          _onLelinkBrowserDidFindLelinkServices(message);
+          _onLelinkBrowserDidFindLelinkServices(serviceNames);
         }
       },
       onLelinkConnectionError: (dynamic message) async {
@@ -172,14 +180,14 @@ class FlutterHpplay {
         }
       },
       onLelinkPlayerStatus: (dynamic message) async {
-        playStatus = LBLelinkPlayStatus.values[int.parse(message)];
+        playStatus = LBLelinkPlayStatus.values[int.parse("$message")];
         if (_onLelinkPlayerStatus != null) {
           _onLelinkPlayerStatus(message);
         }
       },
       onLelinkPlayerProgressInfo: (Map<String, dynamic> message) async {
-        duration = int.parse(message['duration']);
-        currentTime = int.parse(message['currentTime']);
+        duration = int.parse("${message['duration']}");
+        currentTime = int.parse("${message['currentTime']}");
         if (_onLelinkPlayerProgressInfo != null) {
           _onLelinkPlayerProgressInfo(message);
         }
