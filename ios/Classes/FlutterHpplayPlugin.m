@@ -63,6 +63,8 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
     [self setup:call result: result];
   }else if([@"search" isEqualToString:call.method]) {
     [self search:call result: result];
+  }else if([@"stopBrowse" isEqualToString:call.method]) {
+    [self stopBrowse:call result: result];
   }else if([@"deviceListDidSelectIndex" isEqualToString:call.method]) {
     [self deviceListDidSelectIndex:call result: result];
   }else if([@"playMedia" isEqualToString:call.method]) {
@@ -94,6 +96,10 @@ typedef NS_ENUM(NSUInteger, LBVideoCastState) {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerStatusNotification:) name:LBLelinkKitManagerPlayerStatusNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerProgressNotification:) name:LBLelinkKitManagerPlayerProgressNotification object:nil];
     [[LBLelinkKitManager sharedManager] search];
+}
+
+- (void)stopBrowse:(FlutterMethodCall*)call result:(FlutterResult)result {
+    [[LBLelinkKitManager sharedManager] stopSearch];
 }
 
 - (void)deviceListDidSelectIndex:(FlutterMethodCall*)call result:(FlutterResult)result {
