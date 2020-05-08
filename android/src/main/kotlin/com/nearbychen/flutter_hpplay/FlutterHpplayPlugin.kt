@@ -414,7 +414,7 @@ public class FlutterHpplayPlugin(private val registrar: Registrar, channel: Meth
             infos = mLelinkHelper!!.infos
             val myInfos: MutableList<MyLelinkServiceInfo> = mutableListOf()
             infos?.forEach {
-                myInfos.add(MyLelinkServiceInfo(it.name, it.uid, it.types))
+                myInfos.add(MyLelinkServiceInfo(it.name?: "", it.uid?: "", it.types?: ""))
             }
             val myInfosJson = Gson().toJson(myInfos)
             logE("myInfosJson:$myInfosJson")

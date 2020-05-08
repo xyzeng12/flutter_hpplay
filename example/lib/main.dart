@@ -127,7 +127,7 @@ class _MyAppState extends State<MyApp> {
                   var isConnected = await hpplay.isConnected;
                   print('isConnected---$isConnected');
                   hpplay.playMedia(
-                      'http://video.gzk12.com/2cb0accbda1d4f17ae532b1f7f49f571/18e6eda7f5c4a7589a7890584cb7138a-fd-encrypt-stream.m3u8',
+                      'http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4',
                       LBLelinkMediaType.LBLelinkMediaTypeVideoOnline.index);
                 },
                 child: Text('播放: $_platformVersion\n'),
